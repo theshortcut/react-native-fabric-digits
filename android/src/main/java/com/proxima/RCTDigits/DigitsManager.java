@@ -63,7 +63,6 @@ public class DigitsManager extends ReactContextBaseJavaModule implements Lifecyc
 
         // Check for Twitter config
         TwitterAuthConfig authConfig = getTwitterAuthConfig();
-        Fabric.with(getReactApplicationContext(), new TwitterCore(authConfig), new Digits());
 
         AuthConfig.Builder digitsAuthConfigBuilder = new AuthConfig.Builder()
                 .withAuthCallBack(this)
