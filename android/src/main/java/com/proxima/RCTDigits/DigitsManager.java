@@ -86,8 +86,12 @@ public class DigitsManager extends ReactContextBaseJavaModule implements Lifecyc
         DigitsSession session = Digits.getActiveSession();
         if (session != null) {
             WritableMap sessionData = new WritableNativeMap();
-            sessionData.putString("userId", new Long(session.getId()).toString());
+            sessionData.putString("userId", Long.valueOf(session.getId()).toString());
             sessionData.putString("phoneNumber", session.getPhoneNumber().replaceAll("[^0-9]", ""));
+            sessionData.putString("email", session.getEmail().getAddress());
+            TwitterAuthToken authToken = (TwitterAuthToken)session.getAuthToken();
+            sessionData.putString("authToken", authToken.token);
+            sessionData.putString("authTokenSecret", authToken.secret);
             callback.invoke(null, sessionData);
         } else {
             callback.invoke(null, null);
