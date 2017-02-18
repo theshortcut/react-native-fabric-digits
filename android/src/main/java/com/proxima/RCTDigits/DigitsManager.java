@@ -59,16 +59,18 @@ public class DigitsManager extends ReactContextBaseJavaModule implements Lifecyc
         getReactApplicationContext().addLifecycleEventListener(this);
         this.promise = promise;
 
-        String phoneNumber = options.hasKey("phoneNumber") ? options.getString("phoneNumber") : "";
+        String phoneNumber = options != null && options.hasKey("phoneNumber") ?
+            options.getString("phoneNumber") : "";
 
         // Check for Twitter config
         TwitterAuthConfig authConfig = getTwitterAuthConfig();
+        // Fabric.with(getReactApplicationContext(), new TwitterCore(authConfig), new Digits.Builder().build());
 
         AuthConfig.Builder digitsAuthConfigBuilder = new AuthConfig.Builder()
                 .withAuthCallBack(this)
                 .withPhoneNumber(phoneNumber);
 
-        if (options.hasKey("email")) {
+        if (options != null && options.hasKey("email")) {
           digitsAuthConfigBuilder.withEmailCollection();
         }
 
@@ -88,9 +90,11 @@ public class DigitsManager extends ReactContextBaseJavaModule implements Lifecyc
             sessionData.putString("userId", Long.valueOf(session.getId()).toString());
             sessionData.putString("phoneNumber", session.getPhoneNumber().replaceAll("[^0-9]", ""));
             sessionData.putString("email", session.getEmail().address);
-            TwitterAuthToken authToken = (TwitterAuthToken)session.getAuthToken();
-            sessionData.putString("authToken", authToken.token);
-            sessionData.putString("authTokenSecret", authToken.secret);
+            if (session.getAuthToken() instanceof TwitterAuthToken) {
+                TwitterAuthToken authToken = (TwitterAuthToken)session.getAuthToken();
+                sessionData.putString("authToken", authToken.token);
+                sessionData.putString("authTokenSecret", authToken.secret);
+            }
             callback.invoke(null, sessionData);
         } else {
             callback.invoke(null, null);
@@ -155,6 +159,7 @@ public class DigitsManager extends ReactContextBaseJavaModule implements Lifecyc
             return;
         }
 
+
         if (digitsSession != null) {
             TwitterAuthConfig authConfig = TwitterCore.getInstance().getAuthConfig();
             TwitterAuthToken authToken = (TwitterAuthToken) digitsSession.getAuthToken();
@@ -167,13 +172,12 @@ public class DigitsManager extends ReactContextBaseJavaModule implements Lifecyc
             }
 
             promise.resolve(authHeadersNativeMap);
+            promise = null;
         } else if (digitsException != null) {
             promise.reject(digitsException.toString());
-        } else {
-            promise.reject("Authentification failed without exception.");
+            promise = null;
         }
 
-        promise = null;
         digitsSession = null;
         digitsException = null;
         getReactApplicationContext().removeLifecycleEventListener(this);
